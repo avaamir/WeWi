@@ -3,9 +3,12 @@ package mp.amir.ir.wewi.app
 import android.app.Application
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
+import androidx.multidex.MultiDexApplication
 import mp.amir.ir.wewi.R
+import org.conscrypt.Conscrypt
+import java.security.Security
 
-class WewiApplication : Application() {
+class WewiApplication : MultiDexApplication() {
 
     //Typefaces
     val iransans: Typeface by lazy {
@@ -26,4 +29,10 @@ class WewiApplication : Application() {
     val belham: Typeface by lazy {
         ResourcesCompat.getFont(this, R.font.belham)!!
     }
+
+    override fun onCreate() {
+        super.onCreate()
+        Security.insertProviderAt(Conscrypt.newProvider(), 1)
+    }
+
 }

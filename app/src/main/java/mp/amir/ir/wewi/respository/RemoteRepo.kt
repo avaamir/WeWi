@@ -10,10 +10,14 @@ import mp.amir.ir.wewi.models.api.Entity
 import mp.amir.ir.wewi.respository.apiservice.ApiService
 import mp.amir.ir.wewi.utils.general.RunOnceLiveData
 import mp.amir.ir.wewi.utils.general.launchApi
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import retrofit2.Response
+import java.io.IOException
 import kotlin.reflect.KSuspendFunction0
 import kotlin.reflect.KSuspendFunction1
+
 
 object RemoteRepo {
     private lateinit var serverJobs: CompletableJob
@@ -77,11 +81,46 @@ object RemoteRepo {
         }
     }
 
-    fun secondLogin() {
-        /*http://dc.wewi.ir/login.html*/ //username password
+    fun secondLogin(username: String, password: String, onResponse: (String?) -> Unit) {
+        val client = OkHttpClient()
+
+        val body: RequestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addFormDataPart("username", username)
+            .addFormDataPart("password", password)
+            .build()
+        val request: Request = Request.Builder()
+            .url("http://dc.wewi.ir/login.html")
+            .method("POST", body)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                onResponse("${response.code}")
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+               onResponse(e.message)
+            }
+        })
     }
 
-    fun logout() {
-        /*http://dc.wewi.ir/logout.html*/
+    fun logout(onResponse: (String?) -> Unit) {
+        val client = OkHttpClient()
+
+        val body: RequestBody = MultipartBody.Builder().setType(MultipartBody.FORM).build()
+        val request: Request = Request.Builder()
+            .url("http://dc.wewi.ir/logout.html")
+            .method("POST", body)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                onResponse("${response.code}")
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                onResponse(e.message)
+            }
+        })
     }
 }

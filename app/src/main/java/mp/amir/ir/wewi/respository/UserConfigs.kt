@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import mp.amir.ir.wewi.models.User
 import mp.amir.ir.wewi.respository.apiservice.ApiService
 import mp.amir.ir.wewi.respository.persistance.userdb.UserRepo
+import mp.amir.ir.wewi.respository.sharepref.PrefManager
 
 object UserConfigs {
     private val userLive = MutableLiveData<User?>(null)
@@ -22,8 +23,11 @@ object UserConfigs {
         }
     }
 
+    val isUserLoggedIn get() = PrefManager.isUserLoggedIn
+
 
     fun loginUser(user: User, blocking: Boolean = false) {
+        PrefManager.userLoggedIn()
         if (!blocking) {
             if (UserConfigs.user.value != user) {
                 UserRepo.clearAndInsert(user)
@@ -34,6 +38,7 @@ object UserConfigs {
     }
 
     fun logout() {
+        PrefManager.userLoggedOut()
         /*userLive.value?.let {
             PrefsRepo.flush()
             UserRepo.deleteAll()
