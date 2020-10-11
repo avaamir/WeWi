@@ -1,5 +1,6 @@
 package mp.amir.ir.wewi.respository.apiservice
 
+import mp.amir.ir.wewi.models.User
 import mp.amir.ir.wewi.models.api.Entity
 import retrofit2.Response
 import retrofit2.http.Field
@@ -17,7 +18,7 @@ interface WewiClient {
         @Field("loc") location: String,
         @Field("act") action: String,
         @Field("username_type") usernameType: String
-    ): Response<Entity<Unit>>
+    ): Response<Entity<User>>
 
 }
 

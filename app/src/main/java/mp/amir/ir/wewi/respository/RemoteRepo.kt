@@ -1,17 +1,14 @@
 package mp.amir.ir.wewi.respository
 
-import kotlinx.coroutines.CompletableJob
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import mp.amir.ir.wewi.models.User
 import mp.amir.ir.wewi.models.api.Entity
 import mp.amir.ir.wewi.respository.apiservice.ApiService
 import mp.amir.ir.wewi.utils.general.RunOnceLiveData
 import mp.amir.ir.wewi.utils.general.launchApi
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import retrofit2.Response
 import java.io.IOException
@@ -67,41 +64,71 @@ object RemoteRepo {
         }
     }
 
-    fun firstLogin(username: String, password: String, onResponse: (Entity<Unit>?) -> Unit) {
+
+    fun login(username: String, password: String, onResponse: (Entity<User?>?) -> Unit) {
         if (!RemoteRepo::serverJobs.isInitialized || !serverJobs.isActive) serverJobs = Job()
-        CoroutineScope(IO + serverJobs).launch {
-            val response = ApiService.client.login(
-                username = username,    //"09131566906",
-                password = password,    //"762121",
-                action = "btnLogin",
-                location = "loginFirst",
-                usernameType = "num"
-            )
-           //TODO onResponse(response.body() + response.headers()["HotToken"])
-        }
+        CoroutineScope(IO + serverJobs).launchApi({
+            val firstResponse = firstLogin(username, password)
+            if (firstResponse.isSuccessful) {
+                val userEntity = firstResponse.body()
+                val hotToken = firstResponse.headers()["HotToken"]
+                if (!hotToken.isNullOrBlank()) {
+                    val secondResponse = secondLogin(username, hotToken)
+                    if (secondResponse.isSuccessful || secondResponse.isRedirect) {
+                        //TODO inja check beshavad ke aya response miad ya na
+                        //TODO momkene niaz bashe ping bedim be ye addressi ke befahmim net vasl hast ya na
+                        withContext(Main) {
+                            //TODO login succeed -> onResponse(UserEntity)
+                        }
+                    } else {
+                        withContext(Main) {
+                            //TODO onResponse(???)
+                        }
+                    }
+                } else {
+                    withContext(Main) {
+                        //TODO onResponse(NO_HOT_TOKEN)
+                    }
+                }
+
+            } else {
+                withContext(Main) {
+                    //TODO onrResponse(FAILED_FIRST_LOGIN) :: Ex: not authenticated, ..
+                }
+            }
+        }, {
+            //TODO onResponse(it.message)
+        })
     }
 
-    fun secondLogin(username: String, password: String, onResponse: (String?) -> Unit) {
+    private suspend fun firstLogin(
+        username: String,
+        password: String,
+    ) = ApiService.client.login(
+        username = username,    //"09131566906",
+        password = password,    //"762121",
+        action = "btnLogin",
+        location = "loginFirst",
+        usernameType = "num"
+    )
+
+
+    private suspend fun secondLogin(
+        username: String,
+        hotToken: String,
+    ): okhttp3.Response {
         val client = OkHttpClient()
 
         val body: RequestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("username", username)
-            .addFormDataPart("password", password)
+            .addFormDataPart("password", hotToken)
             .build()
         val request: Request = Request.Builder()
             .url("http://dc.wewi.ir/login.html")
             .method("POST", body)
             .build()
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: okhttp3.Response) {
-                onResponse("${response.code}")
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-               onResponse(e.message)
-            }
-        })
+        return client.newCall(request).execute()
     }
 
     fun logout(onResponse: (String?) -> Unit) {
