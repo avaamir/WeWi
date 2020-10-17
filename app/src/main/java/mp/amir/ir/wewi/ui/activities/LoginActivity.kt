@@ -8,6 +8,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import mp.amir.ir.wewi.R
 import mp.amir.ir.wewi.databinding.ActivityLoginBinding
+import mp.amir.ir.wewi.respository.RemoteRepo
 import mp.amir.ir.wewi.utils.general.snack
 import mp.amir.ir.wewi.utils.general.toast
 import mp.amir.ir.wewi.utils.wewi.Constants
@@ -31,6 +32,7 @@ class LoginActivity : AppCompatActivity() {
         subscribeObservers()
 
 
+        RemoteRepo.setContext(this)
     }
 
 
@@ -44,6 +46,7 @@ class LoginActivity : AppCompatActivity() {
                 password.isEmpty() -> toast("گذرواژه خود را وارد کنید")
                 else -> {
                     viewModel.login(username, password)
+                    startActivity(Intent(this, MainActivity::class.java))
                 }
             }
 

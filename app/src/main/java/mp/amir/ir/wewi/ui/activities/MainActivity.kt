@@ -1,6 +1,7 @@
 package mp.amir.ir.wewi.ui.activities
 
 import android.animation.ValueAnimator
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
@@ -8,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import mp.amir.ir.wewi.R
 import mp.amir.ir.wewi.databinding.ActivityMainBinding
+import mp.amir.ir.wewi.respository.RemoteRepo
+import mp.amir.ir.wewi.respository.UserConfigs
+import mp.amir.ir.wewi.utils.general.toast
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
 
+        initViews()
         /*initViews()
         subscribeObservers()*/
         for (x in 1..9) {
@@ -61,6 +66,16 @@ class MainActivity : AppCompatActivity() {
                 index = 0
             )
         }, 800)
+    }
+
+    private fun initViews() {
+        mBinding.ivLogout.setOnClickListener {
+            RemoteRepo.logout {
+                runOnUiThread {
+                    toast(it.toString())
+                }
+            }
+        }
     }
 
     private fun appOpenedAnimation(views: List<View>, index: Int) {
